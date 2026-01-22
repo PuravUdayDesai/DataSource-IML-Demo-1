@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataScope</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+<body>
+    <div class="browser-window">
+        <!-- Browser Chrome -->
+        <div class="browser-chrome">
+            <div class="window-controls">
+                <span class="control close"></span>
+                <span class="control minimize"></span>
+                <span class="control maximize"></span>
+            </div>
+            <div class="tab-bar" id="tabBar">
+                <!-- Tabs will be dynamically created -->
+            </div>
+            <div class="tab-add" id="addTabBtn" title="New Tab">+</div>
+        </div>
+
+        <!-- Navigation Bar -->
+        <div class="nav-bar" id="navBar">
+            <div class="nav-buttons">
+                <button class="nav-btn" id="backBtn" disabled>
+                    <svg width="12" height="12" viewBox="0 0 12 12">
+                        <path d="M8 1L3 6l5 5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                    </svg>
+                </button>
+                <button class="nav-btn" id="forwardBtn" disabled>
+                    <svg width="12" height="12" viewBox="0 0 12 12">
+                        <path d="M4 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                    </svg>
+                </button>
+                <button class="nav-btn" id="refreshBtn">
+                    <svg width="14" height="14" viewBox="0 0 14 14">
+                        <path d="M7 1v2a4 4 0 1 1-4 4H1a6 6 0 1 0 6-6z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="url-bar-container top">
+                <div class="url-bar-wrapper">
+                    <span class="url-icon">🔒</span>
+                    <input type="text" class="url-input" id="urlInputTop" placeholder="Enter Kaggle URL or CSV link...">
+                    <button class="load-btn" id="loadBtnTop">Go</button>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <label class="action-btn" id="uploadBtn" title="Upload CSV/TXT file">
+                    <input type="file" id="fileInput" accept=".csv,.txt" style="display:none">
+                    <svg width="14" height="14" viewBox="0 0 16 16">
+                        <path d="M8 1v10M4 5l4-4 4 4M2 13h12" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                    </svg>
+                </label>
+                <button class="action-btn" id="downloadBtn" title="Download data">
+                    <svg width="14" height="14" viewBox="0 0 16 16">
+                        <path d="M8 1v10M4 7l4 4 4-4M2 13h12" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-area">
+            <!-- Initial Screen -->
+            <div class="initial-screen" id="initialScreen">
+                <div class="logo-container">
+                    <div class="logo">
+                        <span class="logo-icon">📊</span>
+                        <h1 class="logo-text">DataScope</h1>
+                    </div>
+                    <p class="tagline">Visualize & Validate Datasets</p>
+                </div>
+                <div class="center-url-container">
+                    <div class="url-input-wrapper">
+                        <input type="text" class="center-url-input" id="urlInputCenter" 
+                               placeholder="Paste Kaggle dataset URL or CSV link...">
+                        <button class="load-btn-center" id="loadBtnCenter">
+                            <span>Load</span>
+                            <svg viewBox="0 0 16 16" fill="none">
+                                <path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- File Upload Section -->
+                    <div class="upload-section">
+                        <div class="upload-divider">
+                            <span>or</span>
+                        </div>
+                        <label class="upload-box" id="uploadBox">
+                            <input type="file" id="fileInputCenter" accept=".csv,.txt" style="display:none">
+                            <div class="upload-content">
+                                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M16 4v18M8 10l8-8 8 8"/>
+                                    <path d="M4 22v4a2 2 0 002 2h20a2 2 0 002-2v-4"/>
+                                </svg>
+                                <span class="upload-text">Drop CSV or TXT file here</span>
+                                <span class="upload-subtext">or click to browse</span>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="url-hints">
+                        <p>Supports CSV and TXT files, direct URLs, and Kaggle links</p>
+                    </div>
+                </div>
+                <div class="sample-datasets">
+                    <p>Try a sample dataset:</p>
+                    <div class="sample-buttons">
+                        <button class="sample-btn" data-url="https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv">Titanic</button>
+                        <button class="sample-btn" data-url="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv">Iris</button>
+                        <button class="sample-btn" data-url="https://raw.githubusercontent.com/selva86/datasets/master/BostonHousing.csv">Boston Housing</button>
+                        <button class="sample-btn" data-url="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/mpg.csv">Auto MPG</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dataset View -->
+            <div class="dataset-view" id="datasetView">
+                <div class="main-panel">
+                    <div class="panel-header">
+                        <h2 id="datasetTitle">Dataset Preview</h2>
+                        <div class="dataset-stats">
+                            <span class="stat"><strong id="rowCount">0</strong> rows</span>
+                            <span class="stat"><strong id="colCount">0</strong> columns</span>
+                            <span class="stat"><strong id="sizeInfo">0 KB</strong></span>
+                        </div>
+                    </div>
+                    <div class="table-container" id="tableContainer">
+                        <table class="data-table" id="dataTable">
+                            <thead id="tableHead"></thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="pagination">
+                        <button class="page-btn" id="prevPage">Previous</button>
+                        <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                        <button class="page-btn" id="nextPage">Next</button>
+                    </div>
+                </div>
+
+                <!-- Right Panel -->
+                <div class="right-panel" id="rightPanel">
+                    <div class="panel-tabs">
+                        <button class="panel-tab active" data-panel="visualize">Visualize</button>
+                        <button class="panel-tab" data-panel="validate">Validate</button>
+                    </div>
+
+                    <!-- Visualization Panel -->
+                    <div class="panel-content" id="visualizePanel">
+                        <div class="column-selector">
+                            <h3>Select Columns</h3>
+                            <div class="columns-list" id="columnsList"></div>
+                        </div>
+                        <div class="chart-type-selector">
+                            <h3>Chart Type</h3>
+                            <div class="chart-buttons">
+                                <button class="chart-btn" data-chart="histogram" title="Histogram">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <rect x="2" y="12" width="4" height="10" rx="1"/>
+                                        <rect x="8" y="6" width="4" height="16" rx="1"/>
+                                        <rect x="14" y="9" width="4" height="13" rx="1"/>
+                                        <rect x="20" y="4" width="4" height="18" rx="1"/>
+                                    </svg>
+                                    <span>Histogram</span>
+                                </button>
+                                <button class="chart-btn" data-chart="scatter" title="Scatter Plot">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <circle cx="6" cy="18" r="2"/>
+                                        <circle cx="10" cy="12" r="2"/>
+                                        <circle cx="14" cy="16" r="2"/>
+                                        <circle cx="18" cy="8" r="2"/>
+                                        <circle cx="8" cy="8" r="2"/>
+                                        <circle cx="16" cy="12" r="2"/>
+                                    </svg>
+                                    <span>Scatter</span>
+                                </button>
+                                <button class="chart-btn" data-chart="heatmap" title="Heatmap">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <rect x="2" y="2" width="6" height="6" rx="1" opacity="0.3"/>
+                                        <rect x="9" y="2" width="6" height="6" rx="1" opacity="0.7"/>
+                                        <rect x="16" y="2" width="6" height="6" rx="1" opacity="0.5"/>
+                                        <rect x="2" y="9" width="6" height="6" rx="1" opacity="0.7"/>
+                                        <rect x="9" y="9" width="6" height="6" rx="1" opacity="1"/>
+                                        <rect x="16" y="9" width="6" height="6" rx="1" opacity="0.6"/>
+                                        <rect x="2" y="16" width="6" height="6" rx="1" opacity="0.4"/>
+                                        <rect x="9" y="16" width="6" height="6" rx="1" opacity="0.6"/>
+                                        <rect x="16" y="16" width="6" height="6" rx="1" opacity="0.8"/>
+                                    </svg>
+                                    <span>Heatmap</span>
+                                </button>
+                                <button class="chart-btn" data-chart="boxplot" title="Box Plot">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="2" x2="12" y2="6"/>
+                                        <rect x="6" y="6" width="12" height="12" rx="1"/>
+                                        <line x1="6" y1="12" x2="18" y2="12"/>
+                                        <line x1="12" y1="18" x2="12" y2="22"/>
+                                    </svg>
+                                    <span>Box Plot</span>
+                                </button>
+                                <button class="chart-btn" data-chart="pie" title="Pie Chart">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2a10 10 0 1 0 10 10h-10z"/>
+                                        <path d="M12 2v10h10a10 10 0 0 0-10-10" opacity="0.5"/>
+                                    </svg>
+                                    <span>Pie</span>
+                                </button>
+                                <button class="chart-btn" data-chart="bar" title="Bar Chart">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <rect x="4" y="10" width="4" height="12" rx="1"/>
+                                        <rect x="10" y="4" width="4" height="18" rx="1"/>
+                                        <rect x="16" y="8" width="4" height="14" rx="1"/>
+                                    </svg>
+                                    <span>Bar</span>
+                                </button>
+                            </div>
+                        </div>
+                        <button class="generate-chart-btn" id="generateChartBtn">Generate Chart</button>
+                        <div class="chart-output" id="chartOutput"></div>
+                        <div class="chart-insights" id="chartInsights"></div>
+                    </div>
+
+                    <!-- Validation Panel -->
+                    <div class="panel-content hidden" id="validatePanel">
+                        <div class="validation-header">
+                            <h3>Dataset Validation</h3>
+                            <p>Check ML readiness</p>
+                        </div>
+                        <button class="validate-btn" id="validateBtn">Run Validation</button>
+                        <div class="validation-results" id="validationResults">
+                            <div class="validation-item" id="valRowCount">
+                                <span class="val-icon">⏳</span>
+                                <div class="val-content">
+                                    <span class="val-title">Row Count (≈10,000)</span>
+                                    <span class="val-detail">Waiting...</span>
+                                </div>
+                            </div>
+                            <div class="validation-item" id="valNumericVars">
+                                <span class="val-icon">⏳</span>
+                                <div class="val-content">
+                                    <span class="val-title">Numeric Variables (≥7 of 10+)</span>
+                                    <span class="val-detail">Waiting...</span>
+                                </div>
+                            </div>
+                            <div class="validation-item" id="valMissingData">
+                                <span class="val-icon">⏳</span>
+                                <div class="val-content">
+                                    <span class="val-title">Missing Data (&lt;10%)</span>
+                                    <span class="val-detail">Waiting...</span>
+                                </div>
+                            </div>
+                            <div class="validation-item" id="valIndependence">
+                                <span class="val-icon">⏳</span>
+                                <div class="val-content">
+                                    <span class="val-title">Variable Independence</span>
+                                    <span class="val-detail">Waiting...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dataset-score" id="datasetScore">
+                            <div class="score-circle">
+                                <span class="score-value" id="scoreValue">--</span>
+                                <span class="score-label">Score</span>
+                            </div>
+                            <div class="score-grade" id="scoreGrade">
+                                <span class="grade-text">Run validation</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loader">
+                <div class="loader-spinner"></div>
+                <p class="loader-text" id="loaderText">Loading dataset...</p>
+            </div>
+        </div>
+
+        <!-- Chart Modal -->
+        <div class="chart-modal" id="chartModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Chart</h3>
+                    <button class="modal-close" id="modalClose">&times;</button>
+                </div>
+                <div class="modal-body" id="modalChartContainer"></div>
+                <div class="modal-insights" id="modalInsights"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
